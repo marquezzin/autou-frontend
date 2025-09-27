@@ -520,7 +520,14 @@ function App() {
                         {/* Assunto + badge (esquerda) */}
                         <div className="flex items-center gap-2 sm:gap-3 min-w-0 overflow-hidden">
                           <span
-                            className="font-medium text-foreground text-base sm:text-[15px] truncate"
+                            className="
+                              font-medium text-foreground text-base sm:text-[15px]
+                              min-w-0
+                              break-words
+                              line-clamp-2      /* mobile: até 2 linhas */
+                              sm:line-clamp-1   /* desktop: 1 linha */
+                              sm:truncate
+                            "
                             title={item.assunto || 'Sem assunto'}
                           >
                             {item.assunto || 'Sem assunto'}
