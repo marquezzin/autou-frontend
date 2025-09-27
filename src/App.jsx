@@ -5,9 +5,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.j
 import { Textarea } from '@/components/ui/textarea.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { Label } from '@/components/ui/label.jsx'
-import { Upload, Mail, Menu, Copy, Send, Loader2 } from 'lucide-react'
+import { Upload, Mail, Menu, Copy, Send, Loader2, CheckCircle } from 'lucide-react'
 import './App.css'
-import { toast } from 'sonner'
+import { Toaster, toast } from 'sonner'
 
 function App() {
   const [activeTab, setActiveTab] = useState('submission')
@@ -64,7 +64,10 @@ Equipe AutoU`,
     if (result) {
       const content = `Assunto: ${result.subject}\n\n${result.body}`
       navigator.clipboard.writeText(content)
-      toast.success('Conteúdo copiado para a área de transferência!')
+      toast("Conteúdo copiado para a área de transferência!", {
+        duration: 2500,
+        icon: <CheckCircle className="text-green-500" />,
+      })
     }
   }
 
@@ -128,11 +131,11 @@ Equipe AutoU`,
           {/* Right Column - Tabs */}
           <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-2 ">
                 <TabsTrigger 
                   value="submission" 
                   disabled={isLoading}
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 cursor-pointer"
                 >
                   <Upload className="w-4 h-4" />
                   <span>Submissão</span>
@@ -140,7 +143,7 @@ Equipe AutoU`,
                 <TabsTrigger 
                   value="result"
                   disabled={!result && !isLoading}
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 cursor-pointer"
                 >
                   <Mail className="w-4 h-4" />
                   <span>Resultado</span>
@@ -162,14 +165,14 @@ Equipe AutoU`,
                       <Button
                         variant={inputMethod === 'text' ? 'default' : 'outline'}
                         onClick={() => setInputMethod('text')}
-                        className="flex-1"
+                        className="flex-1 cursor-pointer"
                       >
                         Texto
                       </Button>
                       <Button
                         variant={inputMethod === 'file' ? 'default' : 'outline'}
                         onClick={() => setInputMethod('file')}
-                        className="flex-1"
+                        className="flex-1 cursor-pointer"
                       >
                         Upload de Arquivo
                       </Button>
@@ -282,11 +285,11 @@ Equipe AutoU`,
 
                         {/* Action Buttons */}
                         <div className="flex space-x-3">
-                          <Button onClick={copyToClipboard} variant="outline" className="flex-1">
-                            <Copy className="w-4 h-4 mr-2" />
+                          <Button onClick={copyToClipboard} variant="outline" className="flex-1 cursor-pointer">
+                            <Copy className="w-4 h-4 mr-2 " />
                             Copiar Conteúdo
                           </Button>
-                          <Button className="flex-1" onClick={sendEmail}>
+                          <Button className="flex-1 cursor-pointer" onClick={sendEmail}>
                             <Send className="w-4 h-4 mr-2" />
                             Enviar por E-mail
                           </Button>
@@ -305,6 +308,7 @@ Equipe AutoU`,
           </div>
         </div>
       </main>
+      <Toaster position="bottom-center" richColors />
     </div>
   )
 }
