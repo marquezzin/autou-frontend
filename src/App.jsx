@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label.jsx'
 import { Upload, Send, Loader2, CheckCircle,ChevronDown, ChevronUp, Clock, XCircle, Copy as CopyIcon, Sun, Moon, Mail, Menu } from 'lucide-react'
 import './App.css'
 import { Toaster, toast } from 'sonner'
+import newLogo from '@/assets/new_logo.png'
+
 
 function App() {
   const [activeTab, setActiveTab] = useState('submission')
@@ -247,7 +249,7 @@ function App() {
                 <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
                   <div className="text-center text-gray-500">
                     <img
-                      src="/src/assets/new_logo.png"
+                      src={newLogo}
                       alt="Logo"
                       className="w-full h-48 object-cover rounded-lg"
                     />
