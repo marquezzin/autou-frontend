@@ -473,7 +473,7 @@ function App() {
                 ) : (
                   <>
                     <span className="hidden sm:inline">Recarregar</span>
-                    <span className="sm:hidden">Reload</span>
+                    <span className="sm:hidden">Recarregar</span>
                   </>
                 )}
               </Button>
