@@ -452,9 +452,9 @@ function App() {
         {/* History List */}
         <div className="lg:col-span-3 mt-5">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Respostas recentes</CardTitle>
+            <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <CardTitle className="text-lg sm:text-xl">Respostas recentes</CardTitle>
                 <CardDescription className="mt-1">Últimos E-mails Processados</CardDescription>
               </div>
               <Button
@@ -462,19 +462,22 @@ function App() {
                 size="sm"
                 onClick={loadHistory}
                 disabled={isLoadingHistory}
-                className="cursor-pointer"
+                className="self-stretch sm:self-auto cursor-pointer"
               >
                 {isLoadingHistory ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Atualizando...
+                    <span className="hidden sm:inline">Atualizando...</span>
+                    <span className="sm:hidden">Atualizando</span>
                   </>
                 ) : (
-                  'Recarregar'
+                  <>
+                    <span className="hidden sm:inline">Recarregar</span>
+                    <span className="sm:hidden">Reload</span>
+                  </>
                 )}
               </Button>
             </CardHeader>
-
             <CardContent className="space-y-3">
               {isLoadingHistory && history.length === 0 && (
                 <div className="text-sm text-muted-foreground py-8 text-center">
@@ -500,18 +503,27 @@ function App() {
                     {/* Cabeçalho do card */}
                     <button
                       onClick={() => toggleExpand(item.id)}
-                      className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-muted rounded-t-lg cursor-pointer transition-colors"
+                      className="w-full text-left px-3 py-3 sm:px-4 sm:py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between hover:bg-muted rounded-t-lg cursor-pointer transition-colors"
                     >
-                      <div className="flex items-center gap-3">
-                        <span className="font-medium text-foreground">
+                      {/* ESQ: Assunto + badge */}
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <span
+                          className="font-medium text-foreground text-base sm:text-[15px] truncate max-w-[75vw] sm:max-w-none"
+                          title={item.assunto || 'Sem assunto'}
+                        >
                           {item.assunto || 'Sem assunto'}
                         </span>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${clsColor}`}>
+
+                        <span
+                          className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium ${clsColor}`}
+                        >
                           {item.classificacao || '—'}
                         </span>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+
+                      {/* DIR: Data + chevron */}
+                      <div className="flex items-center justify-between sm:justify-end gap-3">
+                        <span className="text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
                           {new Date(item.created_at).toLocaleString()}
                         </span>
@@ -525,31 +537,36 @@ function App() {
 
                     {/* Corpo expandido */}
                     {open && (
-                      <div className="px-4 pb-4">
-                        <div className="mt-2">
+                      <div className="px-3 sm:px-4 pb-4">
+                        <div className="mt-1 sm:mt-2">
                           <Label className="text-sm font-medium text-foreground">Classificação</Label>
-                          <div className={`inline-block ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${clsColor}`}>
+                          <div
+                            className={`inline-block ml-2 px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium ${clsColor}`}
+                          >
                             {item.classificacao}
                           </div>
                         </div>
 
-                        <div className="mt-3">
+                        <div className="mt-2 sm:mt-3">
                           <Label className="text-sm font-medium text-foreground">Resposta</Label>
-                          <div className="p-3 bg-muted rounded-lg mt-1">
-                            <pre className="text-sm whitespace-pre-wrap font-sans">{item.resposta || '-'}</pre>
+                          <div className="p-2 sm:p-3 bg-muted rounded-lg mt-1">
+                            <pre className="text-sm whitespace-pre-wrap break-words font-sans">
+                              {item.resposta || '-'}
+                            </pre>
                           </div>
                         </div>
 
-                        <div className="mt-3 flex gap-3">
+                        <div className="mt-3 flex flex-col sm:flex-row gap-2 sm:gap-3">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => copyItemResponse(item)}
-                            className="cursor-pointer"
+                            className="w-full sm:w-auto cursor-pointer"
                           >
                             <CopyIcon className="w-4 h-4 mr-2" />
                             Copiar resposta
                           </Button>
+
                           <Button
                             size="sm"
                             onClick={() => {
@@ -557,7 +574,7 @@ function App() {
                               const body = encodeURIComponent(item.resposta || '')
                               window.location.href = `mailto:?subject=${subject}&body=${body}`
                             }}
-                            className="cursor-pointer"
+                            className="w-full sm:w-auto cursor-pointer"
                           >
                             <Send className="w-4 h-4 mr-2" />
                             Enviar e-mail
@@ -565,6 +582,7 @@ function App() {
                         </div>
                       </div>
                     )}
+
                   </div>
                 )
               })}
