@@ -503,46 +503,47 @@ function App() {
                     {/* Cabeçalho do card */}
                     <button
                       onClick={() => toggleExpand(item.id)}
-                      className="w-full text-left px-3 py-3 sm:px-4 sm:py-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between hover:bg-muted rounded-t-lg cursor-pointer transition-colors"
+                      className="w-full text-left px-3 py-3 sm:px-4 sm:py-3 rounded-t-lg hover:bg-muted transition-colors cursor-pointer"
                     >
-                      {/* ESQ: Assunto + badge */}
-                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                        <span
-                          className="font-medium text-foreground text-base sm:text-[15px] truncate max-w-[75vw] sm:max-w-none"
-                          title={item.assunto || 'Sem assunto'}
-                        >
-                          {item.assunto || 'Sem assunto'}
-                        </span>
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto] sm:items-center">
+                        {/* Assunto + badge (esquerda) */}
+                        <div className="flex items-center gap-2 sm:gap-3 min-w-0 overflow-hidden">
+                          <span
+                            className="font-medium text-foreground text-base sm:text-[15px] truncate"
+                            title={item.assunto || 'Sem assunto'}
+                          >
+                            {item.assunto || 'Sem assunto'}
+                          </span>
 
-                        <span
-                          className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium ${clsColor}`}
-                        >
-                          {item.classificacao || '—'}
-                        </span>
-                      </div>
+                          <span
+                            className={`shrink-0 px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium ${clsColor}`}
+                          >
+                            {item.classificacao || '—'}
+                          </span>
+                        </div>
 
-                      {/* DIR: Data + chevron */}
-                      <div className="flex items-center justify-between sm:justify-end gap-3">
-                        <span className="text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="w-3.5 h-3.5" />
-                          {new Date(item.created_at).toLocaleString()}
-                        </span>
-                        {open ? (
-                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
-                        )}
+                        {/* Data + chevron (direita) */}
+                        <div className="flex items-center justify-between sm:justify-end gap-3">
+                          <span className="text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1">
+                            <Clock className="w-3.5 h-3.5" />
+                            {new Date(item.created_at).toLocaleString()}
+                          </span>
+                          {open ? (
+                            <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                          ) : (
+                            <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                          )}
+                        </div>
                       </div>
                     </button>
+
 
                     {/* Corpo expandido */}
                     {open && (
                       <div className="px-3 sm:px-4 pb-4">
                         <div className="mt-1 sm:mt-2">
                           <Label className="text-sm font-medium text-foreground">Classificação</Label>
-                          <div
-                            className={`inline-block ml-2 px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium ${clsColor}`}
-                          >
+                          <div className={`inline-block ml-2 px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium ${clsColor}`}>
                             {item.classificacao}
                           </div>
                         </div>
@@ -550,6 +551,7 @@ function App() {
                         <div className="mt-2 sm:mt-3">
                           <Label className="text-sm font-medium text-foreground">Resposta</Label>
                           <div className="p-2 sm:p-3 bg-muted rounded-lg mt-1">
+                            {/* quebra segura no iOS */}
                             <pre className="text-sm whitespace-pre-wrap break-words font-sans">
                               {item.resposta || '-'}
                             </pre>
@@ -566,7 +568,6 @@ function App() {
                             <CopyIcon className="w-4 h-4 mr-2" />
                             Copiar resposta
                           </Button>
-
                           <Button
                             size="sm"
                             onClick={() => {
