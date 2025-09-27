@@ -1,12 +1,14 @@
 Instruções para rodar localmente:
 
 - Rodar backend (localhost:8000) -> instruções no README do `https://github.com/marquezzin/autou-backend/`
+  
+- Clonar esse repositório
 
-- Criar .env.local no frontend com VITE_API_URL=http://localhost:8000
+- Criar .env com base no .env.example e colocar: VITE_API_URL=http://localhost:8000
 
-- npm install
+- Rodar npm install
 
-- npm run dev
+- Rodar npm run dev
 
 - Acessar http://localhost:5173
 
