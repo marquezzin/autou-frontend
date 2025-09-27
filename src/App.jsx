@@ -374,9 +374,9 @@ function App() {
               
               {/* Result Tab */}
               <TabsContent value="result" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Resultado Gerado</CardTitle>
+                <Card className="overflow-hidden">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg sm:text-xl">Resultado Gerado</CardTitle>
                     <CardDescription className="text-muted-foreground">
                       E-mail processado pela IA
                     </CardDescription>
@@ -386,17 +386,17 @@ function App() {
                     {isLoading ? (
                       <div className="flex items-center justify-center py-12">
                         <div className="text-center">
-                          <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin text-[color:var(--primary)]" />
+                          <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin" style={{ color: "var(--primary)" }} />
                           <p className="text-muted-foreground">Processando com IA...</p>
                         </div>
                       </div>
                     ) : result ? (
                       <div className="space-y-6">
-                        {/* Classification */}
-                        <div className="flex items-center space-x-2">
+                        {/* Classificação */}
+                        <div className="flex items-center gap-2">
                           <span className="text-sm font-medium text-foreground">Classificação:</span>
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                            className={`px-2 py-0.5 rounded-full text-[11px] sm:text-xs font-medium ${
                               result.classification === 'Produtivo'
                                 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                                 : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
@@ -406,31 +406,42 @@ function App() {
                           </span>
                         </div>
 
-                        {/* Subject */}
+                        {/* Assunto */}
                         <div className="space-y-2">
                           <Label className="text-sm font-medium text-foreground">Assunto</Label>
-                          <div className="p-3 bg-muted rounded-lg">
-                            <p className="text-sm text-foreground">{result.subject}</p>
+                          <div className="p-3 sm:p-4 bg-muted rounded-lg">
+                            <p className="text-sm text-foreground break-words">{result.subject}</p>
                           </div>
                         </div>
 
-                        {/* Body */}
+                        {/* Corpo do e-mail */}
                         <div className="space-y-2">
                           <Label className="text-sm font-medium text-foreground">Corpo do E-mail</Label>
-                          <div className="p-4 bg-muted rounded-lg">
-                            <pre className="text-sm whitespace-pre-wrap font-sans text-foreground">
+                          <div className="p-3 sm:p-4 bg-muted rounded-lg">
+                            {/* Safari-iOS: quebra segura de linha/palavra */}
+                            <pre className="text-sm whitespace-pre-wrap break-words font-sans text-foreground">
                               {result.body}
                             </pre>
                           </div>
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex space-x-3">
-                          <Button onClick={copyToClipboard} variant="outline" className="flex-1 cursor-pointer">
+                        {/* Ações */}
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                          <Button
+                            onClick={copyToClipboard}
+                            variant="outline"
+                            className="w-full sm:w-auto cursor-pointer"
+                            aria-label="Copiar conteúdo gerado"
+                          >
                             <CopyIcon className="w-4 h-4 mr-2" />
                             Copiar Conteúdo
                           </Button>
-                          <Button className="flex-1 cursor-pointer" onClick={sendEmail}>
+
+                          <Button
+                            onClick={sendEmail}
+                            className="w-full sm:w-auto cursor-pointer"
+                            aria-label="Enviar e-mail"
+                          >
                             <Send className="w-4 h-4 mr-2" />
                             Enviar por E-mail
                           </Button>
