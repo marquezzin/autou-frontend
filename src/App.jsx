@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.jsx'
 import { Textarea } from '@/components/ui/textarea.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { Label } from '@/components/ui/label.jsx'
-import { Upload, Mail, Menu, Copy, Send, Loader2, CheckCircle } from 'lucide-react'
+import { Upload, Send, Loader2, CheckCircle,ChevronDown, ChevronUp, Clock, XCircle, Copy as CopyIcon, Sun, Moon, Mail, Menu } from 'lucide-react'
 import './App.css'
 import { Toaster, toast } from 'sonner'
 
@@ -16,7 +16,43 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [inputMethod, setInputMethod] = useState('text') // 'text' ou 'file'
+  const [history, setHistory] = useState([])            // lista de e-mails do backend
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false)
+  const [expandedIds, setExpandedIds] = useState(new Set()) // controle de “abrir/fechar” card
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+  const { darkMode, toggle } = useTheme()
+
+  useEffect(() => {
+    loadHistory()
+  }, [])
+
+  function useTheme() {
+    const [darkMode, setDarkMode] = useState(false)
+
+    // 1) Carrega preferência salva ou do SO
+    useEffect(() => {
+      const saved = localStorage.getItem("theme") // "dark" | "light" | null
+      if (saved) {
+        const isDark = saved === "dark"
+        setDarkMode(isDark)
+        document.documentElement.classList.toggle("dark", isDark)
+      } else {
+        const prefers = window.matchMedia("(prefers-color-scheme: dark)").matches
+        setDarkMode(prefers)
+        document.documentElement.classList.toggle("dark", prefers)
+      }
+    }, [])
+
+    // 2) Aplica e persiste ao mudar
+    const toggle = () => {
+      const next = !darkMode
+      setDarkMode(next)
+      document.documentElement.classList.toggle("dark", next)
+      localStorage.setItem("theme", next ? "dark" : "light")
+    }
+
+    return { darkMode, toggle }
+  }
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0]
@@ -32,6 +68,46 @@ function App() {
     // fallback: usa trecho do original
     const base = (original || '').replace(/\s+/g, ' ').slice(0, 60)
     return base ? `Re: ${base}` : 'Retorno — AutoU Invest'
+  }
+
+  function toggleExpand(id) {
+    setExpandedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  function copyItemResponse(item) {
+    const content = `Assunto: ${item.assunto || ''}\n\n${item.resposta || ''}`
+    navigator.clipboard.writeText(content)
+    toast("Conteúdo copiado para a área de transferência!", {
+      duration: 2500,
+      icon: <CheckCircle className="text-green-500" />,
+    })
+  }
+
+  async function loadHistory() {
+    try {
+      setIsLoadingHistory(true)
+      const res = await fetch(`${API_URL}/emails?page=1&page_size=10`)
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.detail || `Erro ${res.status}`)
+      }
+      const data = await res.json()
+      setHistory(Array.isArray(data?.items) ? data.items : [])
+    } catch (e) {
+      console.error(e)
+      toast(e.message || "Falha ao carregar histórico", {
+        duration: 3000,
+        icon: <XCircle className="text-red-500" />,
+      })
+      loadHistory() 
+    } finally {
+      setIsLoadingHistory(false)
+    }
   }
 
   const callApi = async () => {
@@ -109,22 +185,51 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-4">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8  rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--primary)" }}>
-              <Mail className="w-5 h-5 text-white" />
-            </div>
-            <h1 className="text-xl font-semibold text-gray-900">SmartMail AutoU</h1>
+    <header className="bg-card border-b border-border px-4 py-4">
+      <div className="max-w-6xl mx-auto flex items-center justify-between">
+        {/* Esquerda: logo + título + tagline */}
+        <div className="flex items-center space-x-3">
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ backgroundColor: "var(--primary)" }}
+          >
+            <Mail className="w-5 h-5 text-[color:var(--primary-foreground)]" />
           </div>
-          
+          <div>
+            <h1 className="text-xl font-semibold text-foreground">SmartMail AutoU</h1>
+            <p className="text-xs text-muted-foreground">
+              Classificação e respostas automáticas de e-mails
+            </p>
+          </div>
+        </div>
+
+        {/* Direita: status, CTA, tema, menu mobile */}
+        <div className="flex items-center space-x-2">
+
+          {/* Toggle de tema */}
+          <button
+            onClick={toggle}
+            className="p-2 rounded-md hover:bg-muted/60 transition-colors cursor-pointer"
+            aria-label="Alternar tema"
+            title={darkMode ? "Tema claro" : "Tema escuro"}
+          >
+            {darkMode ? (
+              <Sun className="w-5 h-5 text-yellow-500" />
+            ) : (
+              <Moon className="w-5 h-5 text-foreground/70" />
+            )}
+          </button>
+
+          {/* Menu mobile (mantido) */}
           <Button variant="ghost" size="sm" className="md:hidden">
             <Menu className="w-5 h-5" />
           </Button>
         </div>
-      </header>
+      </div>
+    </header>
+
 
       {/* Main Content */}
       <main className="max-w-6xl mx-auto px-4 py-8">
@@ -148,7 +253,7 @@ function App() {
                     />
                   </div>
                 </div>
-                <div className="mt-4 space-y-2 text-sm text-gray-600">
+                <div className="mt-4 space-y-2 text-sm">
                   <p>• Ganho de eficiência</p>
                   <p>• Classificação de e-mails</p>
                   <p>• Geração de respostas automatizadas</p>
@@ -264,58 +369,63 @@ function App() {
                   </CardContent>
                 </Card>
               </TabsContent>
-
+              
               {/* Result Tab */}
               <TabsContent value="result" className="mt-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>Resultado Gerado</CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-muted-foreground">
                       E-mail processado pela IA
                     </CardDescription>
                   </CardHeader>
+
                   <CardContent>
                     {isLoading ? (
                       <div className="flex items-center justify-center py-12">
                         <div className="text-center">
-                          <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin text-blue-600" />
-                          <p className="text-gray-600">Processando com IA...</p>
+                          <Loader2 className="w-8 h-8 mx-auto mb-4 animate-spin text-[color:var(--primary)]" />
+                          <p className="text-muted-foreground">Processando com IA...</p>
                         </div>
                       </div>
                     ) : result ? (
                       <div className="space-y-6">
                         {/* Classification */}
                         <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium text-gray-700">Classificação:</span>
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                            result.classification === 'Produtivo' 
-                              ? 'bg-green-100 text-green-800' 
-                              : 'bg-red-100 text-red-800'
-                          }`}>
+                          <span className="text-sm font-medium text-foreground">Classificação:</span>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              result.classification === 'Produtivo'
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                            }`}
+                          >
                             {result.classification}
                           </span>
                         </div>
 
                         {/* Subject */}
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700">Assunto</Label>
-                          <div className="p-3 bg-gray-50 rounded-lg">
-                            <p className="text-sm">{result.subject}</p>
+                          <Label className="text-sm font-medium text-foreground">Assunto</Label>
+                          <div className="p-3 bg-muted rounded-lg">
+                            <p className="text-sm text-foreground">{result.subject}</p>
                           </div>
                         </div>
 
                         {/* Body */}
                         <div className="space-y-2">
-                          <Label className="text-sm font-medium text-gray-700">Corpo do E-mail</Label>
-                          <div className="p-4 bg-gray-50 rounded-lg">
-                            <pre className="text-sm whitespace-pre-wrap font-sans">{result.body}</pre>
+                          <Label className="text-sm font-medium text-foreground">Corpo do E-mail</Label>
+                          <div className="p-4 bg-muted rounded-lg">
+                            <pre className="text-sm whitespace-pre-wrap font-sans text-foreground">
+                              {result.body}
+                            </pre>
                           </div>
                         </div>
 
                         {/* Action Buttons */}
                         <div className="flex space-x-3">
                           <Button onClick={copyToClipboard} variant="outline" className="flex-1 cursor-pointer">
-                            <Copy className="w-4 h-4 mr-2 " />
+                            <CopyIcon className="w-4 h-4 mr-2" />
                             Copiar Conteúdo
                           </Button>
                           <Button className="flex-1 cursor-pointer" onClick={sendEmail}>
@@ -325,16 +435,143 @@ function App() {
                         </div>
                       </div>
                     ) : (
-                      <div className="text-center py-12 text-gray-500">
-                        <Mail className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Mail className="w-12 h-12 mx-auto mb-4 opacity-60" />
                         <p>Nenhum resultado ainda. Faça uma submissão primeiro.</p>
                       </div>
                     )}
                   </CardContent>
                 </Card>
               </TabsContent>
+
             </Tabs>
           </div>
+
+        {/* History List */}
+        <div className="lg:col-span-3 mt-5">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <div>
+                <CardTitle>Respostas recentes</CardTitle>
+                <CardDescription className="mt-1">Últimos E-mails Processados</CardDescription>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={loadHistory}
+                disabled={isLoadingHistory}
+                className="cursor-pointer"
+              >
+                {isLoadingHistory ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Atualizando...
+                  </>
+                ) : (
+                  'Recarregar'
+                )}
+              </Button>
+            </CardHeader>
+
+            <CardContent className="space-y-3">
+              {isLoadingHistory && history.length === 0 && (
+                <div className="text-sm text-muted-foreground py-8 text-center">
+                  Carregando histórico...
+                </div>
+              )}
+
+              {!isLoadingHistory && history.length === 0 && (
+                <div className="text-sm text-muted-foreground py-8 text-center">
+                  Nenhuma resposta gerada ainda.
+                </div>
+              )}
+
+              {history.map((item) => {
+                const open = expandedIds.has(item.id)
+                const clsColor =
+                  item.classificacao === 'Produtivo'
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+
+                return (
+                  <div key={item.id} className="border border-border rounded-lg bg-card">
+                    {/* Cabeçalho do card */}
+                    <button
+                      onClick={() => toggleExpand(item.id)}
+                      className="w-full text-left px-4 py-3 flex items-center justify-between hover:bg-muted rounded-t-lg cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="font-medium text-foreground">
+                          {item.assunto || 'Sem assunto'}
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${clsColor}`}>
+                          {item.classificacao || '—'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          {new Date(item.created_at).toLocaleString()}
+                        </span>
+                        {open ? (
+                          <ChevronUp className="w-5 h-5 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5 text-muted-foreground" />
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Corpo expandido */}
+                    {open && (
+                      <div className="px-4 pb-4">
+                        <div className="mt-2">
+                          <Label className="text-sm font-medium text-foreground">Classificação</Label>
+                          <div className={`inline-block ml-2 px-2 py-0.5 rounded-full text-xs font-medium ${clsColor}`}>
+                            {item.classificacao}
+                          </div>
+                        </div>
+
+                        <div className="mt-3">
+                          <Label className="text-sm font-medium text-foreground">Resposta</Label>
+                          <div className="p-3 bg-muted rounded-lg mt-1">
+                            <pre className="text-sm whitespace-pre-wrap font-sans">{item.resposta || '-'}</pre>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 flex gap-3">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyItemResponse(item)}
+                            className="cursor-pointer"
+                          >
+                            <CopyIcon className="w-4 h-4 mr-2" />
+                            Copiar resposta
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              const subject = encodeURIComponent(item.assunto || '')
+                              const body = encodeURIComponent(item.resposta || '')
+                              window.location.href = `mailto:?subject=${subject}&body=${body}`
+                            }}
+                            className="cursor-pointer"
+                          >
+                            <Send className="w-4 h-4 mr-2" />
+                            Enviar e-mail
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </CardContent>
+
+          </Card>
+        </div>
+
+
         </div>
       </main>
       <Toaster position="bottom-center" richColors />
