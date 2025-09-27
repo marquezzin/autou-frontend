@@ -16,6 +16,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [inputMethod, setInputMethod] = useState('text') // 'text' ou 'file'
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0]
@@ -24,39 +25,67 @@ function App() {
     }
   }
 
-  const simulateAIGeneration = async () => {
+  function buildSubject(classification, original) {
+    // Heurística simples só pra ter um assunto "ok"
+    if (classification === 'Produtivo') return 'Retorno AutoU Invest — seu atendimento'
+    if (classification === 'Improdutivo') return 'Agradecimento — AutoU Invest'
+    // fallback: usa trecho do original
+    const base = (original || '').replace(/\s+/g, ' ').slice(0, 60)
+    return base ? `Re: ${base}` : 'Retorno — AutoU Invest'
+  }
+
+  const callApi = async () => {
     setIsLoading(true)
-    
-    // Simular chamada à API
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    const mockResult = {
-      subject: "Solicitação de Informações - Projeto AutoU",
-      body: `Prezados,
+    try {
+      const fd = new FormData()
+      if (inputMethod === 'text') {
+        fd.append('conteudo', emailText)
+      } else if (uploadedFile) {
+        fd.append('file', uploadedFile)
+      }
 
-Espero que estejam bem. Gostaria de solicitar informações adicionais sobre o projeto AutoU que estamos desenvolvendo.
+      const res = await fetch(`${API_URL}/emails/ai`, {
+        method: 'POST',
+        body: fd,
+      })
 
-Especificamente, preciso de:
-- Detalhes sobre a implementação da IA
-- Cronograma de desenvolvimento
-- Recursos necessários para a próxima fase
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err?.detail || `Erro ${res.status}`)
+      }
 
-Agradeço pela atenção e aguardo retorno.
+      // A API retorna: { id, conteudo, classificacao, resposta, created_at, ... }
+      const data = await res.json()
 
-Atenciosamente,
-Equipe AutoU`,
-      classification: "Produtivo",
-      originalContent: inputMethod === 'text' ? emailText : uploadedFile?.name || ''
+      const mapped = {
+        subject: data.assunto || buildSubject(data.classificacao, data.conteudo),
+        body: data.resposta,
+        classification: data.classificacao,
+        originalContent: inputMethod === 'text' ? emailText : uploadedFile?.name || '',
+        id: data.id,
+        createdAt: data.created_at,
+      }
+
+      setResult(mapped)
+      setActiveTab('result')
+      toast("E-mail processado com sucesso!", {
+        duration: 2500,
+        icon: <CheckCircle className="text-green-500" />,
+      })
+    } catch (e) {
+      console.error(e)
+      toast(e.message || "Falha ao processar com IA", {
+        duration: 3000,
+        icon: <XCircle className="text-red-500" />,
+      })
+    } finally {
+      setIsLoading(false)
     }
-    
-    setResult(mockResult)
-    setIsLoading(false)
-    setActiveTab('result')
   }
 
   const handleSubmit = () => {
     if ((inputMethod === 'text' && emailText.trim()) || (inputMethod === 'file' && uploadedFile)) {
-      simulateAIGeneration()
+      callApi()
     }
   }
 
@@ -106,7 +135,7 @@ Equipe AutoU`,
               <CardHeader>
                 <CardTitle className="text-lg">Automatização de E-mails</CardTitle>
                 <CardDescription>
-                  Demonstração do fluxo de respostas automáticas com IA
+                  Otimize a rotina: a IA lê, classifica e responde seus e-mails em segundos.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -122,7 +151,7 @@ Equipe AutoU`,
                 <div className="mt-4 space-y-2 text-sm text-gray-600">
                   <p>• Ganho de eficiência</p>
                   <p>• Classificação de e-mails</p>
-                  <p>• Geração de respostas com IA</p>
+                  <p>• Geração de respostas automatizadas</p>
                 </div>
               </CardContent>
             </Card>
@@ -202,7 +231,7 @@ Equipe AutoU`,
                             type="file"
                             onChange={handleFileUpload}
                             className="hidden"
-                            accept=".txt,.doc,.docx,.pdf"
+                            accept=".txt,.pdf"
                           />
                           <label htmlFor="file-upload" className="cursor-pointer">
                             <Upload className="w-8 h-8 mx-auto mb-2 text-gray-400" />
@@ -210,7 +239,7 @@ Equipe AutoU`,
                               {uploadedFile ? uploadedFile.name : 'Clique para selecionar um arquivo'}
                             </p>
                             <p className="text-xs text-gray-400 mt-1">
-                              Formatos aceitos: TXT, DOC, DOCX, PDF
+                              Formatos aceitos: TXT, PDF
                             </p>
                           </label>
                         </div>
@@ -221,7 +250,7 @@ Equipe AutoU`,
                     <Button 
                       onClick={handleSubmit}
                       disabled={isLoading || (inputMethod === 'text' && !emailText.trim()) || (inputMethod === 'file' && !uploadedFile)}
-                      className="w-full"
+                      className="w-full cursor-pointer"
                     >
                       {isLoading ? (
                         <>
