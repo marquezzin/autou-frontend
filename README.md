@@ -13,3 +13,5 @@ Instruções para rodar localmente:
 - Acessar http://localhost:5173
 
 Url em produção disponível: https://autou-frontend-ten.vercel.app/
+
+OBS: Como o backend está hospedado no plano gratuito do render, quando a aplicação fica 15 minutos sem receber uma requisição, a mesma entra em modo "sleep". Então, as vezes se torna necessário esperar no máximo 1 minuto para que o aplicação volte a funcionar corretamente. 
